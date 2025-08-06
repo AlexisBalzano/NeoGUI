@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake)
-project(NeoVSID VERSION "1.2.5")
+project(NeoGUI VERSION "0.0.1")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,12 +42,12 @@ find_package(nlohmann_json CONFIG REQUIRED)
 # Source files
 # To set after starting development
 set(SOURCES
-    src/NeoVSID.cpp
+    "src/NeoGUI.cpp"
     src/main.cpp
 )
 
 # Define the plugin library
-add_library(${PROJECT_NAME} SHARED ${SOURCES}  "src/core/DataManager.cpp" "src/utils/Format.h" "src/config/Colors.h")
+add_library(${PROJECT_NAME} SHARED ${SOURCES}    "src/config/Colors.h")
 
 #set_property(TARGET ${PROJECT_NAME}  PROPERTY CXX_STANDARD 20)
 
@@ -70,9 +70,6 @@ if(${CMAKE_HOST_APPLE})
         OUTPUT_NAME ${PROJECT_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR}
     )
 endif()
-
-# Collect all .json files in src/config/
-file(GLOB CONFIG_JSON_FILES "${CMAKE_SOURCE_DIR}/src/config/*.json")
 
 # Copy them to the build directory
 file(COPY ${CONFIG_JSON_FILES} DESTINATION ${CMAKE_BINARY_DIR})
