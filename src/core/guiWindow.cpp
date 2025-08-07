@@ -3,7 +3,7 @@
 using namespace neogui;
 
 GuiWindow::GuiWindow(unsigned int width, unsigned int height, const std::string& title, const std::wstring& parentTitle)
-    : window_(sf::VideoMode({ width, height }), title, sf::Style::None), width_(width), height_(height), show_(true), dragging_(false)
+    : window_(sf::VideoMode({ width, height }), title, sf::Style::None), title_(title), width_(width), height_(height), show_(true), dragging_(false)
 {
     shape_.setRadius(static_cast<float>(std::min(width, height)) / 2.f);
     shape_.setFillColor(sf::Color::Green);

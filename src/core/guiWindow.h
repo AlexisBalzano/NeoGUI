@@ -19,6 +19,8 @@ public:
     bool isOpen() const { return window_.isOpen(); }
     void close() { window_.close(); }
 
+	std::string getTitle() const { return title_; }
+
     void processEvents();
     void updateDrag();
     void render();
@@ -26,6 +28,7 @@ public:
 private:
     sf::RenderWindow window_;
     sf::CircleShape shape_;
+    std::string title_;
     unsigned int width_, height_;
     bool show_;
 
