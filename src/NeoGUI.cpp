@@ -1,7 +1,9 @@
-#include "NeoGUI.h"
 #include <numeric>
+#include <algorithm>
 #include <chrono>
 #include <SFML/Graphics.hpp>
+
+#include "NeoGUI.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -87,6 +89,7 @@ void neogui::NeoGUI::requestNewWindow(const std::string& title)
 {
     newWindowRequested_ = true;
     newWindowName_ = title;
+	std::transform(newWindowName_.begin(), newWindowName_.end(), newWindowName_.begin(), ::toupper);
 }
 
 bool neogui::NeoGUI::removeWindow(const std::string& title)
@@ -97,6 +100,7 @@ bool neogui::NeoGUI::removeWindow(const std::string& title)
 	}
     removeWindowRequested_ = true;
 	removeWindowName_ = title;
+	std::transform(removeWindowName_.begin(), removeWindowName_.end(), removeWindowName_.begin(), ::toupper);
     auto it = std::find_if(windows_.begin(), windows_.end(),
         [&title](const std::shared_ptr<GuiWindow>& win) { return win->getTitle() == title; });
     if (it != windows_.end()) {
@@ -107,7 +111,7 @@ bool neogui::NeoGUI::removeWindow(const std::string& title)
 
 void neogui::NeoGUI::addWindow(const std::string& title)
 {
-    windows_.emplace_back(std::make_shared<GuiWindow>(defaultWindowWidth, defaultWindowHeight, title, L"NeoRadar"));
+    windows_.emplace_back(std::make_shared<GuiWindow>(defaultWindowWidth, defaultWindowHeight, title, L"NeoRadar", this->GetLogger()));
 }
 
 void neogui::NeoGUI::runScopeUpdate()
