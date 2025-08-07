@@ -87,9 +87,6 @@ void neogui::NeoGUI::requestNewWindow(const std::string& title)
 {
     newWindowRequested_ = true;
     newWindowName_ = title;
-    if (title == "") {
-		newWindowName_ = "New Window " + std::to_string(windows_.size() + 1);
-    }
 }
 
 bool neogui::NeoGUI::removeWindow(const std::string& title)
