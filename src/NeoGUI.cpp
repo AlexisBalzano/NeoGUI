@@ -1,9 +1,15 @@
 #include "NeoGUI.h"
 #include <numeric>
 #include <chrono>
+#include <SFML/Graphics.hpp>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "Version.h"
 #include "core/CompileCommands.h"
+
 
 using namespace neogui;
 
@@ -25,7 +31,7 @@ void NeoGUI::Initialize(const PluginMetadata &metadata, CoreAPI *coreAPI, Client
     tagInterface_ = lcoreAPI->tag().getInterface();
 
     DisplayMessage("Version " + std::string(PLUGIN_VERSION) + " loaded.", "Initialisation");
-    
+
     try
     {
         this->RegisterCommand();
@@ -51,7 +57,6 @@ void NeoGUI::Shutdown()
 
     this->m_stop = true;
     this->m_worker.join();
-
     this->unegisterCommand();
 }
 
@@ -77,16 +82,71 @@ void neogui::NeoGUI::runScopeUpdate()
 }
 
 void NeoGUI::run() {
-    int counter = 1;
-    while (true) {
-        counter += 1;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+    sf::RenderWindow window(sf::VideoMode({ 200, 200 }), "SFML works!", sf::Style::None);
+    sf::CircleShape shape(100.f);
+    shape.setFillColor(sf::Color::Green);
 
-        if (true == this->m_stop) return;
-        
-        //this->OnTimer(counter);
+#ifdef _WIN32
+    HWND hwnd = window.getNativeHandle();
+    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    exStyle &= ~WS_EX_APPWINDOW;
+    exStyle |= WS_EX_TOOLWINDOW;
+    SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+
+    bool dragging = false;
+    POINT clickOffset = {0, 0};
+
+    while (window.isOpen()) {
+        if (m_stop) {
+            window.close();
+            return;
+        }
+
+        while (const std::optional event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>())
+                window.close();
+
+            if (event->is<sf::Event::MouseButtonPressed>()) {
+                auto mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
+                if (mouseEvent->button == sf::Mouse::Button::Left) {
+                    dragging = true;
+                    // Get the mouse position relative to the screen
+                    POINT mousePos;
+                    GetCursorPos(&mousePos);
+                    // Get the window position
+                    RECT winRect;
+                    GetWindowRect(hwnd, &winRect);
+                    // Store the offset between mouse and window origin
+                    clickOffset.x = mousePos.x - winRect.left;
+                    clickOffset.y = mousePos.y - winRect.top;
+                }
+            }
+            if (event->is<sf::Event::MouseButtonReleased>()) {
+                auto mouseEvent = event->getIf<sf::Event::MouseButtonReleased>();
+                if (mouseEvent->button == sf::Mouse::Button::Left) {
+                    dragging = false;
+                }
+            }
+        }
+
+        // If dragging, move the window to follow the mouse
+        if (dragging) {
+            POINT mousePos;
+            GetCursorPos(&mousePos);
+            SetWindowPos(hwnd, nullptr,
+                mousePos.x - clickOffset.x,
+                mousePos.y - clickOffset.y,
+                0, 0,
+                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+
+        window.clear();
+        window.draw(shape);
+        window.display();
     }
-    return;
+#endif
 }
 
 PluginSDK::PluginMetadata NeoGUI::GetMetadata() const
