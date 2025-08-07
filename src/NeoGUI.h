@@ -31,6 +31,8 @@ namespace neogui {
         // Command handling
         void TagProcessing(const std::string& callsign, const std::string& actionId, const std::string& userInput = "");
 		bool toggleShowWindow();
+		void requestNewWindow(const std::string& title);
+		bool removeWindow(const std::string& title);
 
 		// API Accessors
         PluginSDK::Logger::LoggerAPI* GetLogger() const { return logger_; }
@@ -45,11 +47,17 @@ namespace neogui {
     private:
         void runScopeUpdate();
         void run();
+        void addWindow(const std::string& title);
+
 
     public:
         // Command IDs
         std::string versionCommandId_;
         std::string showCommandId_;
+        std::string addCommandId_;
+        std::string removeCommandId_;
+
+
         
     private:
         // Plugin state
@@ -57,6 +65,10 @@ namespace neogui {
         std::thread m_worker;
         bool m_stop;
 		bool showWindow_ = true;
+		bool newWindowRequested_ = false;
+        std::string newWindowName_{};
+        bool removeWindowRequested_ = false;
+		std::string removeWindowName_{};
 
 		unsigned int defaultWindowWidth = 200;
 		unsigned int defaultWindowHeight = 200;

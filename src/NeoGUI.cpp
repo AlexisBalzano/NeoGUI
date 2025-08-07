@@ -83,14 +83,43 @@ bool neogui::NeoGUI::toggleShowWindow()
 	return showWindow_;
 }
 
+void neogui::NeoGUI::requestNewWindow(const std::string& title)
+{
+    newWindowRequested_ = true;
+    newWindowName_ = title;
+    if (title == "") {
+		newWindowName_ = "New Window " + std::to_string(windows_.size() + 1);
+    }
+}
+
+bool neogui::NeoGUI::removeWindow(const std::string& title)
+{
+    if (title.empty()) {
+        logger_->warning("Attempted to remove a window with an empty title.");
+        return false;
+	}
+    removeWindowRequested_ = true;
+	removeWindowName_ = title;
+    auto it = std::find_if(windows_.begin(), windows_.end(),
+        [&title](const std::shared_ptr<GuiWindow>& win) { return win->getTitle() == title; });
+    if (it != windows_.end()) {
+        return true;
+    }
+	return false;
+}
+
+void neogui::NeoGUI::addWindow(const std::string& title)
+{
+    windows_.emplace_back(std::make_shared<GuiWindow>(defaultWindowWidth, defaultWindowHeight, title, L"NeoRadar"));
+}
+
 void neogui::NeoGUI::runScopeUpdate()
 {
 }
 
 void NeoGUI::run()
 {
-    windows_.emplace_back(std::make_unique<GuiWindow>(defaultWindowWidth, defaultWindowHeight, "NeoGUI Window 1", L"NeoRadar"));
-    windows_.emplace_back(std::make_unique<GuiWindow>(defaultWindowWidth, defaultWindowHeight, "NeoGUI Window 2", L"NeoRadar"));
+	addWindow("first window");
 
     while (true) {
         if (m_stop) {
@@ -98,6 +127,20 @@ void NeoGUI::run()
 			windows_.clear();
             return;
         }
+
+        if (removeWindowRequested_) {
+            auto it = std::remove_if(windows_.begin(), windows_.end(),
+                [this](const std::shared_ptr<GuiWindow>& win) { return win->getTitle() == removeWindowName_; });
+            if (it != windows_.end()) {
+                windows_.erase(it, windows_.end());
+            }
+            removeWindowRequested_ = false;
+		}
+
+        if (newWindowRequested_) {
+            addWindow(newWindowName_);
+            newWindowRequested_ = false;
+		}
 
         int waitTime = showWindow_ ? 10 : 500;
         std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
