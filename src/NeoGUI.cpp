@@ -82,7 +82,9 @@ void neogui::NeoGUI::runScopeUpdate()
 }
 
 void NeoGUI::run() {
-    sf::RenderWindow window(sf::VideoMode({ 200, 200 }), "SFML works!", sf::Style::None);
+	unsigned int windowWidth = 200;
+	unsigned int windowHeight = 200;
+    sf::RenderWindow window(sf::VideoMode({ windowWidth, windowHeight }), "SFML works!", sf::Style::None);
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);
 
@@ -135,10 +137,18 @@ void NeoGUI::run() {
         // If dragging, move the window to follow the mouse
         if (dragging) {
             POINT mousePos;
+            auto xValue = mousePos.x - clickOffset.x;
+			auto yValue = mousePos.y - clickOffset.y;
+            
+			if (xValue < 0) xValue = 0;
+			if (yValue < 0) yValue = 0;
+			if (xValue > GetSystemMetrics(SM_CXSCREEN) - windowWidth) xValue = GetSystemMetrics(SM_CXSCREEN) - windowWidth;
+			if (yValue > GetSystemMetrics(SM_CYSCREEN) - windowHeight) yValue = GetSystemMetrics(SM_CYSCREEN) - windowHeight;
+
             GetCursorPos(&mousePos);
             SetWindowPos(hwnd, nullptr,
-                mousePos.x - clickOffset.x,
-                mousePos.y - clickOffset.y,
+                xValue,
+                yValue,
                 0, 0,
                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
         }
