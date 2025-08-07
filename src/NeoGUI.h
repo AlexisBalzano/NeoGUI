@@ -5,6 +5,7 @@
 
 #include "SDK.h"
 #include "core/NeoGUICommandProvider.h"
+#include "core/guiWindow.h"
 
 using namespace PluginSDK;
 
@@ -57,8 +58,9 @@ namespace neogui {
         bool m_stop;
 		bool showWindow_ = true;
 
-		unsigned int windowWidth = 200;
-		unsigned int windowHeight = 200;
+		unsigned int defaultWindowWidth = 200;
+		unsigned int defaultWindowHeight = 200;
+		std::vector<std::shared_ptr<GuiWindow>> windows_;
 
         // APIs
         PluginMetadata metadata_;

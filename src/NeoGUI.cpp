@@ -54,7 +54,7 @@ void NeoGUI::Shutdown()
         initialized_ = false;
         logger_->info("NeoGUI shutdown complete");
     }
-
+	
     this->m_stop = true;
     this->m_worker.join();
     this->unegisterCommand();
@@ -87,86 +87,31 @@ void neogui::NeoGUI::runScopeUpdate()
 {
 }
 
-void NeoGUI::run() {
-    sf::RenderWindow window(sf::VideoMode({ windowWidth, windowHeight }), "NeoGUI Default Window", sf::Style::None);
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
+void NeoGUI::run()
+{
+    windows_.emplace_back(std::make_unique<GuiWindow>(defaultWindowWidth, defaultWindowHeight, "NeoGUI Window 1", L"NeoRadar"));
+    windows_.emplace_back(std::make_unique<GuiWindow>(defaultWindowWidth, defaultWindowHeight, "NeoGUI Window 2", L"NeoRadar"));
 
-#ifdef _WIN32
-    HWND hwnd = window.getNativeHandle();
-    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-    exStyle &= ~WS_EX_APPWINDOW;
-    exStyle |= WS_EX_TOOLWINDOW;
-    SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
-    
-    bool dragging = false;
-    POINT clickOffset = {0, 0};
-
-    HWND mainHwnd = FindWindowW(nullptr, L"NeoRadar");
-    SetWindowLongPtr(hwnd, GWLP_HWNDPARENT, (LONG_PTR)mainHwnd);
-
-    while (window.isOpen()) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        
+    while (true) {
         if (m_stop) {
-            window.close();
+            for (auto& win : windows_) win->close();
+			windows_.clear();
             return;
         }
 
-		window.setVisible(showWindow_);
-        if (!showWindow_) continue;
+        int waitTime = showWindow_ ? 10 : 500;
+        std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
 
-        while (const std::optional event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-
-            if (event->is<sf::Event::MouseButtonPressed>()) {
-                auto mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
-                if (mouseEvent->button == sf::Mouse::Button::Left) {
-                    dragging = true;
-                    // Get the mouse position relative to the screen
-                    POINT mousePos;
-                    GetCursorPos(&mousePos);
-                    // Get the window position
-                    RECT winRect;
-                    GetWindowRect(hwnd, &winRect);
-                    // Store the offset between mouse and window origin
-                    clickOffset.x = mousePos.x - winRect.left;
-                    clickOffset.y = mousePos.y - winRect.top;
-                }
+        for (auto& win : windows_) {
+            win->setVisible(showWindow_);
+            if (!win->isVisible() || !win->isOpen()) {
+                continue;
             }
-            if (event->is<sf::Event::MouseButtonReleased>()) {
-                auto mouseEvent = event->getIf<sf::Event::MouseButtonReleased>();
-                if (mouseEvent->button == sf::Mouse::Button::Left) {
-                    dragging = false;
-                }
-            }
+            win->processEvents();
+            win->updateDrag();
+            win->render();
         }
-
-        // If dragging, move the window to follow the mouse
-        if (dragging) {
-            POINT mousePos;
-            auto xValue = mousePos.x - clickOffset.x;
-			auto yValue = mousePos.y - clickOffset.y;
-            
-			if (xValue < 0) xValue = 0;
-			if (yValue < 0) yValue = 0;
-            if (xValue > GetSystemMetrics(SM_CXSCREEN) - static_cast<int>(windowWidth)) xValue = GetSystemMetrics(SM_CXSCREEN) - static_cast<int>(windowWidth);
-            if (yValue > GetSystemMetrics(SM_CYSCREEN) - static_cast<int>(windowHeight)) yValue = GetSystemMetrics(SM_CYSCREEN) - static_cast<int>(windowHeight);
-
-            GetCursorPos(&mousePos);
-            SetWindowPos(hwnd, nullptr,
-                xValue,
-                yValue,
-                0, 0,
-                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-        }
-
-        window.clear();
-        window.draw(shape);
-        window.display();
     }
-#endif
 }
 
 PluginSDK::PluginMetadata NeoGUI::GetMetadata() const
