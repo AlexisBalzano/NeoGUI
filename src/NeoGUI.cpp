@@ -120,7 +120,7 @@ void neogui::NeoGUI::runScopeUpdate()
 
 void NeoGUI::run()
 {
-	addWindow("first window");
+	addWindow("TEST");
 
     while (true) {
         if (m_stop) {
