@@ -77,14 +77,17 @@ void neogui::NeoGUI::TagProcessing(const std::string& callsign, const std::strin
 {
 }
 
+bool neogui::NeoGUI::toggleShowWindow()
+{
+    showWindow_ = !showWindow_;
+	return showWindow_;
+}
+
 void neogui::NeoGUI::runScopeUpdate()
 {
 }
 
 void NeoGUI::run() {
-	unsigned int windowWidth = 200;
-	unsigned int windowHeight = 200;
-
     sf::RenderWindow window(sf::VideoMode({ windowWidth, windowHeight }), "NeoGUI Default Window", sf::Style::None);
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);
@@ -103,10 +106,15 @@ void NeoGUI::run() {
     SetWindowLongPtr(hwnd, GWLP_HWNDPARENT, (LONG_PTR)mainHwnd);
 
     while (window.isOpen()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        
         if (m_stop) {
             window.close();
             return;
         }
+
+		window.setVisible(showWindow_);
+        if (!showWindow_) continue;
 
         while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>())

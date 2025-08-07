@@ -29,6 +29,7 @@ namespace neogui {
 
         // Command handling
         void TagProcessing(const std::string& callsign, const std::string& actionId, const std::string& userInput = "");
+		bool toggleShowWindow();
 
 		// API Accessors
         PluginSDK::Logger::LoggerAPI* GetLogger() const { return logger_; }
@@ -46,14 +47,18 @@ namespace neogui {
 
     public:
         // Command IDs
-        std::string commandId_;
         std::string versionCommandId_;
+        std::string showCommandId_;
         
     private:
         // Plugin state
         bool initialized_ = false;
         std::thread m_worker;
         bool m_stop;
+		bool showWindow_ = true;
+
+		unsigned int windowWidth = 200;
+		unsigned int windowHeight = 200;
 
         // APIs
         PluginMetadata metadata_;
