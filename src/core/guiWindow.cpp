@@ -5,8 +5,7 @@ using namespace neogui;
 GuiWindow::GuiWindow(unsigned int width, unsigned int height, const std::string& title, const std::wstring& parentTitle)
     : window_(sf::VideoMode({ width, height }), title, sf::Style::None), title_(title), width_(width), height_(height), show_(true), dragging_(false)
 {
-    shape_.setRadius(static_cast<float>(std::min(width, height)) / 2.f);
-    shape_.setFillColor(sf::Color::Green);
+	addDefaultGraphics();
 
 #ifdef _WIN32
     hwnd_ = window_.getNativeHandle();
@@ -24,6 +23,14 @@ void GuiWindow::setVisible(bool visible)
 {
     show_ = visible;
     window_.setVisible(visible);
+}
+
+void neogui::GuiWindow::addDefaultGraphics()
+{
+    // Add default graphics to the window
+    auto* shape = new sf::CircleShape(50.f);
+    shape->setFillColor(sf::Color::Green);
+	drawables_.push_back(shape);
 }
 
 void GuiWindow::processEvents()
@@ -76,7 +83,9 @@ void GuiWindow::render()
 {
     if (show_) {
         window_.clear();
-        window_.draw(shape_);
+        for (const auto& drawable : drawables_) {
+            window_.draw(*drawable);
+		}
         window_.display();
     }
 }

@@ -21,13 +21,14 @@ public:
 
 	std::string getTitle() const { return title_; }
 
+    void addDefaultGraphics();
     void processEvents();
     void updateDrag();
     void render();
 
 private:
     sf::RenderWindow window_;
-    sf::CircleShape shape_;
+	std::vector<sf::Drawable*> drawables_;
     std::string title_;
     unsigned int width_, height_;
     bool show_;
