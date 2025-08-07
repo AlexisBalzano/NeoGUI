@@ -17,6 +17,13 @@ void NeoGUI::RegisterCommand() {
 		definition.parameters.clear();
 
         versionCommandId_ = chatAPI_->registerCommand(definition.name, definition, CommandProvider_);
+        
+        definition.name = "gui show";
+        definition.description = "toggle show/hide GUI window";
+        definition.lastParameterHasSpaces = false;
+        definition.parameters.clear();
+
+        showCommandId_ = chatAPI_->registerCommand(definition.name, definition, CommandProvider_);
     }
     catch (const std::exception& ex)
     {
@@ -29,6 +36,7 @@ inline void NeoGUI::unegisterCommand()
     if (CommandProvider_)
     {
         chatAPI_->unregisterCommand(versionCommandId_);
+		chatAPI_->unregisterCommand(showCommandId_);
         CommandProvider_.reset();
 	}
 }
@@ -41,6 +49,13 @@ Chat::CommandResult NeoGUICommandProvider::Execute( const std::string &commandId
         neoGUI_->DisplayMessage(message);
         return { true, std::nullopt };
 	}
+    else if (commandId == neoGUI_->showCommandId_)
+    {
+        bool showing = neoGUI_->toggleShowWindow();
+		std::string message = showing ? "GUI window is now visible." : "GUI window is now hidden.";
+        neoGUI_->DisplayMessage(message);
+        return { true, std::nullopt };
+    }
     else {
         std::string error = "Invalid command. Use .gui <command> <param>";
         neoGUI_->DisplayMessage(error);
