@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake)
+#set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake)
 project(NeoGUI VERSION "0.0.1")
 
 set(CMAKE_CXX_STANDARD 20)
@@ -36,8 +36,23 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
 )
 
-# Find external dependencies
-find_package(nlohmann_json CONFIG REQUIRED)
+include(FetchContent)
+
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3
+)
+
+FetchContent_MakeAvailable(nlohmann_json)
+
+FetchContent_Declare(
+    SFML
+    GIT_REPOSITORY https://github.com/SFML/SFML.git
+    GIT_TAG 3.0.1
+)
+
+FetchContent_MakeAvailable(SFML)
 
 # Source files
 # To set after starting development
@@ -52,9 +67,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES}    "src/config/Colors.h")
 #set_property(TARGET ${PROJECT_NAME}  PROPERTY CXX_STANDARD 20)
 
 # Link dependencies
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    nlohmann_json::nlohmann_json
-)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json sfml-graphics sfml-window sfml-system)
 
 # Set output directory and properties
 set_target_properties(${PROJECT_NAME} PROPERTIES
