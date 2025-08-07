@@ -1,10 +1,10 @@
 #pragma once
 #include <array>
 #include <optional>
+#include <SFML/Graphics/Color.hpp>
 
 namespace Colors{
-	std::optional<std::array<unsigned int, 3>> green = std::array<unsigned int, 3>{127, 252, 73};
-	std::optional<std::array<unsigned int, 3>> white = std::array<unsigned int, 3>({ 255, 255, 255});
-	std::optional<std::array<unsigned int, 3>> red = std::array<unsigned int, 3>({ 240, 0, 0 });
-	std::optional<std::array<unsigned int, 3>> orange = std::array<unsigned int, 3>({ 255, 153, 51 });
+	sf::Color const DarkGrey = sf::Color(20, 20, 20, 255);
+	sf::Color const Grey = sf::Color(40, 40, 40, 255);
+	sf::Color const LightkGrey = sf::Color(60, 60, 60, 255);
 }

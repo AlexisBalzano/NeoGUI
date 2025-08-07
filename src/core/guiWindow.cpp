@@ -1,4 +1,5 @@
 #include "guiWindow.h"
+#include "../config/Colors.h"
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -38,7 +39,7 @@ GuiWindow::GuiWindow(unsigned int width, unsigned int height, const std::string&
 	: window_(sf::VideoMode({ width, height }), title, sf::Style::None), title_(title), width_(width), height_(height), show_(true), dragging_(false), loggerAPI_(loggerAPI)
 {
     // Load NeoRadar font
-	std::filesystem::path fontPath = getNeoRadarDirectory() / "fonts" / "OrlyLabelVATSIM.ttf";
+	std::filesystem::path fontPath = getNeoRadarDirectory() / "fonts" / "RobotoMono-VariableFont_wght.ttf";
     if (!font_.openFromFile(fontPath)) {
 		loggerAPI_->log(PluginSDK::Logger::LogLevel::Error, "Failed to load font from: " + fontPath.string());
     }
@@ -74,12 +75,12 @@ void GuiWindow::setVisible(bool visible)
 void neogui::GuiWindow::addDefaultGraphics()
 {
     // Add default graphics to the window, rendered in the order they are added (last rendered is above all)
-    auto shape = std::make_unique<sf::RectangleShape>(sf::Vector2f{ static_cast<float>(width_), 30 });
-    shape->setFillColor(sf::Color::Magenta);
+    auto shape = std::make_unique<sf::RectangleShape>(sf::Vector2f{ static_cast<float>(width_), 25 });
+    shape->setFillColor(Colors::DarkGrey);
     drawables_.push_back(std::move(shape));
 
     shape = std::make_unique<sf::RectangleShape>(sf::Vector2f{ static_cast<float>(width_), 170 });
-    shape->setFillColor(sf::Color::Green);
+    shape->setFillColor(Colors::LightkGrey);
     shape->setPosition({ 0, 30 });
     drawables_.push_back(std::move(shape));
 
@@ -88,6 +89,7 @@ void neogui::GuiWindow::addDefaultGraphics()
     sf::FloatRect textRect = text->getLocalBounds();
     float x = (static_cast<float>(width_) - textRect.size.x) / 2.f;
     text->setPosition({ x, 0 });
+	text->setStyle(sf::Text::Bold);
 	drawables_.push_back(std::move(text));
 }
 
