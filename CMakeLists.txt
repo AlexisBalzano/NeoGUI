@@ -62,7 +62,7 @@ set(SOURCES
 )
 
 # Define the plugin library
-add_library(${PROJECT_NAME} SHARED ${SOURCES}    "src/config/Colors.h")
+add_library(${PROJECT_NAME} SHARED ${SOURCES}    "src/config/Colors.h" "src/core/guiWindow.h" "src/core/guiWindow.cpp")
 
 #set_property(TARGET ${PROJECT_NAME}  PROPERTY CXX_STANDARD 20)
 

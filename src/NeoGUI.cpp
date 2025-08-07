@@ -54,7 +54,7 @@ void NeoGUI::Shutdown()
         initialized_ = false;
         logger_->info("NeoGUI shutdown complete");
     }
-
+	
     this->m_stop = true;
     this->m_worker.join();
     this->unegisterCommand();
@@ -77,76 +77,84 @@ void neogui::NeoGUI::TagProcessing(const std::string& callsign, const std::strin
 {
 }
 
+bool neogui::NeoGUI::toggleShowWindow()
+{
+    showWindow_ = !showWindow_;
+	return showWindow_;
+}
+
+void neogui::NeoGUI::requestNewWindow(const std::string& title)
+{
+    newWindowRequested_ = true;
+    newWindowName_ = title;
+    if (title == "") {
+		newWindowName_ = "New Window " + std::to_string(windows_.size() + 1);
+    }
+}
+
+bool neogui::NeoGUI::removeWindow(const std::string& title)
+{
+    if (title.empty()) {
+        logger_->warning("Attempted to remove a window with an empty title.");
+        return false;
+	}
+    removeWindowRequested_ = true;
+	removeWindowName_ = title;
+    auto it = std::find_if(windows_.begin(), windows_.end(),
+        [&title](const std::shared_ptr<GuiWindow>& win) { return win->getTitle() == title; });
+    if (it != windows_.end()) {
+        return true;
+    }
+	return false;
+}
+
+void neogui::NeoGUI::addWindow(const std::string& title)
+{
+    windows_.emplace_back(std::make_shared<GuiWindow>(defaultWindowWidth, defaultWindowHeight, title, L"NeoRadar"));
+}
+
 void neogui::NeoGUI::runScopeUpdate()
 {
 }
 
-void NeoGUI::run() {
-    sf::RenderWindow window(sf::VideoMode({ 200, 200 }), "SFML works!", sf::Style::None);
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
+void NeoGUI::run()
+{
+	addWindow("first window");
 
-#ifdef _WIN32
-    HWND hwnd = window.getNativeHandle();
-    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-    exStyle &= ~WS_EX_APPWINDOW;
-    exStyle |= WS_EX_TOOLWINDOW;
-    SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
-
-    bool dragging = false;
-    POINT clickOffset = {0, 0};
-
-    while (window.isOpen()) {
+    while (true) {
         if (m_stop) {
-            window.close();
+            for (auto& win : windows_) win->close();
+			windows_.clear();
             return;
         }
 
-        while (const std::optional event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-
-            if (event->is<sf::Event::MouseButtonPressed>()) {
-                auto mouseEvent = event->getIf<sf::Event::MouseButtonPressed>();
-                if (mouseEvent->button == sf::Mouse::Button::Left) {
-                    dragging = true;
-                    // Get the mouse position relative to the screen
-                    POINT mousePos;
-                    GetCursorPos(&mousePos);
-                    // Get the window position
-                    RECT winRect;
-                    GetWindowRect(hwnd, &winRect);
-                    // Store the offset between mouse and window origin
-                    clickOffset.x = mousePos.x - winRect.left;
-                    clickOffset.y = mousePos.y - winRect.top;
-                }
+        if (removeWindowRequested_) {
+            auto it = std::remove_if(windows_.begin(), windows_.end(),
+                [this](const std::shared_ptr<GuiWindow>& win) { return win->getTitle() == removeWindowName_; });
+            if (it != windows_.end()) {
+                windows_.erase(it, windows_.end());
             }
-            if (event->is<sf::Event::MouseButtonReleased>()) {
-                auto mouseEvent = event->getIf<sf::Event::MouseButtonReleased>();
-                if (mouseEvent->button == sf::Mouse::Button::Left) {
-                    dragging = false;
-                }
+            removeWindowRequested_ = false;
+		}
+
+        if (newWindowRequested_) {
+            addWindow(newWindowName_);
+            newWindowRequested_ = false;
+		}
+
+        int waitTime = showWindow_ ? 10 : 500;
+        std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
+
+        for (auto& win : windows_) {
+            win->setVisible(showWindow_);
+            if (!win->isVisible() || !win->isOpen()) {
+                continue;
             }
+            win->processEvents();
+            win->updateDrag();
+            win->render();
         }
-
-        // If dragging, move the window to follow the mouse
-        if (dragging) {
-            POINT mousePos;
-            GetCursorPos(&mousePos);
-            SetWindowPos(hwnd, nullptr,
-                mousePos.x - clickOffset.x,
-                mousePos.y - clickOffset.y,
-                0, 0,
-                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-        }
-
-        window.clear();
-        window.draw(shape);
-        window.display();
     }
-#endif
 }
 
 PluginSDK::PluginMetadata NeoGUI::GetMetadata() const
