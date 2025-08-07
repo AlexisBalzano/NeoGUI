@@ -3,6 +3,8 @@
 #include <string>
 #include <optional>
 
+#include "SDK.h"
+
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -11,7 +13,8 @@ namespace neogui {
 
 class GuiWindow {
 public:
-    GuiWindow(unsigned int width, unsigned int height, const std::string& title, const std::wstring& parentTitle);
+    GuiWindow(unsigned int width, unsigned int height, const std::string& title, const std::wstring& parentTitle, PluginSDK::Logger::LoggerAPI* loggerAPI);
+	~GuiWindow();
 
     void setVisible(bool visible);
 
@@ -20,6 +23,7 @@ public:
     void close() { window_.close(); }
 
 	std::string getTitle() const { return title_; }
+	std::filesystem::path getNeoRadarDirectory() const;
 
     void addDefaultGraphics();
     void processEvents();
@@ -27,9 +31,14 @@ public:
     void render();
 
 private:
+    // API
+    PluginSDK::Logger::LoggerAPI* loggerAPI_;
+
+	// SFML
     sf::RenderWindow window_;
-	std::vector<sf::Drawable*> drawables_;
+    std::vector <std::unique_ptr<sf::Drawable>> drawables_;
     std::string title_;
+	sf::Font font_;
     unsigned int width_, height_;
     bool show_;
 

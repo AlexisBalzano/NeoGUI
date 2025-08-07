@@ -1,10 +1,47 @@
 #include "guiWindow.h"
 
+#if defined(_WIN32)
+#include <Windows.h>
+#include <shlobj.h>
+#include <knownfolders.h>
+#elif defined(__APPLE__) || defined(__linux__)
+#include <dlfcn.h>
+#include <cstdlib>
+#endif
+
+
 using namespace neogui;
 
-GuiWindow::GuiWindow(unsigned int width, unsigned int height, const std::string& title, const std::wstring& parentTitle)
-    : window_(sf::VideoMode({ width, height }), title, sf::Style::None), title_(title), width_(width), height_(height), show_(true), dragging_(false)
+std::filesystem::path GuiWindow::getNeoRadarDirectory() const
 {
+#if defined(_WIN32)
+    PWSTR path = nullptr;
+    HRESULT hr = SHGetKnownFolderPath(FOLDERID_Documents, 0, NULL, &path);
+    std::filesystem::path documentsPath;
+    if (SUCCEEDED(hr)) {
+        documentsPath = path;
+        CoTaskMemFree(path);
+    }
+    return documentsPath / "NeoRadar";
+#elif defined(__APPLE__) || defined(__linux__)
+    const char* homeDir = std::getenv("HOME");
+    if (homeDir) {
+        return std::filesystem::path(homeDir) / "Documents" / "NeoRadar";
+    }
+    return std::filesystem::path(); // Return empty path if HOME is not set
+#else
+    return std::filesystem::path(); // Return an empty path for unsupported platforms
+#endif
+}
+
+GuiWindow::GuiWindow(unsigned int width, unsigned int height, const std::string& title, const std::wstring& parentTitle, PluginSDK::Logger::LoggerAPI* loggerAPI)
+	: window_(sf::VideoMode({ width, height }), title, sf::Style::None), title_(title), width_(width), height_(height), show_(true), dragging_(false), loggerAPI_(loggerAPI)
+{
+    // Load NeoRadar font
+	std::filesystem::path fontPath = getNeoRadarDirectory() / "fonts" / "OrlyLabelVATSIM.ttf";
+    if (!font_.openFromFile(fontPath)) {
+		loggerAPI_->log(PluginSDK::Logger::LogLevel::Error, "Failed to load font from: " + fontPath.string());
+    }
 	addDefaultGraphics();
 
 #ifdef _WIN32
@@ -19,6 +56,15 @@ GuiWindow::GuiWindow(unsigned int width, unsigned int height, const std::string&
 #endif
 }
 
+neogui::GuiWindow::~GuiWindow()
+{
+    // Ensure the window is closed when the object is destroyed
+    if (window_.isOpen()) {
+        window_.close();
+	}
+	drawables_.clear();
+}
+
 void GuiWindow::setVisible(bool visible)
 {
     show_ = visible;
@@ -27,10 +73,22 @@ void GuiWindow::setVisible(bool visible)
 
 void neogui::GuiWindow::addDefaultGraphics()
 {
-    // Add default graphics to the window
-    auto* shape = new sf::CircleShape(50.f);
+    // Add default graphics to the window, rendered in the order they are added (last rendered is above all)
+    auto shape = std::make_unique<sf::RectangleShape>(sf::Vector2f{ static_cast<float>(width_), 30 });
+    shape->setFillColor(sf::Color::Magenta);
+    drawables_.push_back(std::move(shape));
+
+    shape = std::make_unique<sf::RectangleShape>(sf::Vector2f{ static_cast<float>(width_), 170 });
     shape->setFillColor(sf::Color::Green);
-	drawables_.push_back(shape);
+    shape->setPosition({ 0, 30 });
+    drawables_.push_back(std::move(shape));
+
+    auto text = std::make_unique<sf::Text>(font_, title_, 20);
+    text->setFillColor(sf::Color::White);
+    sf::FloatRect textRect = text->getLocalBounds();
+    float x = (static_cast<float>(width_) - textRect.size.x) / 2.f;
+    text->setPosition({ x, 0 });
+	drawables_.push_back(std::move(text));
 }
 
 void GuiWindow::processEvents()
