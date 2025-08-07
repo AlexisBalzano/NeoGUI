@@ -92,11 +92,12 @@ void NeoGUI::run() {
     exStyle &= ~WS_EX_APPWINDOW;
     exStyle |= WS_EX_TOOLWINDOW;
     SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
-
+    
     bool dragging = false;
     POINT clickOffset = {0, 0};
+
+    HWND mainHwnd = FindWindowW(nullptr, L"NeoRadar");
+    SetWindowLongPtr(hwnd, GWLP_HWNDPARENT, (LONG_PTR)mainHwnd);
 
     while (window.isOpen()) {
         if (m_stop) {
