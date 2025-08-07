@@ -84,7 +84,8 @@ void neogui::NeoGUI::runScopeUpdate()
 void NeoGUI::run() {
 	unsigned int windowWidth = 200;
 	unsigned int windowHeight = 200;
-    sf::RenderWindow window(sf::VideoMode({ windowWidth, windowHeight }), "SFML works!", sf::Style::None);
+
+    sf::RenderWindow window(sf::VideoMode({ windowWidth, windowHeight }), "NeoGUI Default Window", sf::Style::None);
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);
 
@@ -142,8 +143,8 @@ void NeoGUI::run() {
             
 			if (xValue < 0) xValue = 0;
 			if (yValue < 0) yValue = 0;
-			if (xValue > GetSystemMetrics(SM_CXSCREEN) - windowWidth) xValue = GetSystemMetrics(SM_CXSCREEN) - windowWidth;
-			if (yValue > GetSystemMetrics(SM_CYSCREEN) - windowHeight) yValue = GetSystemMetrics(SM_CYSCREEN) - windowHeight;
+            if (xValue > GetSystemMetrics(SM_CXSCREEN) - static_cast<int>(windowWidth)) xValue = GetSystemMetrics(SM_CXSCREEN) - static_cast<int>(windowWidth);
+            if (yValue > GetSystemMetrics(SM_CYSCREEN) - static_cast<int>(windowHeight)) yValue = GetSystemMetrics(SM_CYSCREEN) - static_cast<int>(windowHeight);
 
             GetCursorPos(&mousePos);
             SetWindowPos(hwnd, nullptr,
